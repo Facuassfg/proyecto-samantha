@@ -1,0 +1,57 @@
+# docker-compose.yml
+version: '3.8'
+
+services:
+  # 1. SERVIDOR DE BASE DE DATOS: MySQL (db)
+  db:
+    image: mysql:8.0
+    container_name: samantha-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      # Volumen persistente para los datos
+      - db_data:/var/lib/mysql
+    networks:
+      - app-network
+
+  # 2. SERVIDOR DE APLICACIÓN: PHP-FPM (app) - Backend
+  app:
+    image: php:8.2-fpm
+    container_name: samantha-app
+    restart: always
+    volumes:
+      # Monta tu código PHP local
+      - ./app:/var/www/html 
+    networks:
+      - app-network
+    depends_on:
+      - db
+
+  # 3. SERVIDOR WEB: Nginx (webserver) - Punto de Entrada (Frontend)
+  webserver:
+    image: nginx:stable-alpine
+    container_name: samantha-web
+    restart: always
+    ports:
+      # Acceso desde tu PC
+      - "${NGINX_HOST_PORT}:80" 
+    volumes:
+      - ./app:/var/www/html
+      # Configuración de Nginx
+      - ./nginx/conf.d:/etc/nginx/conf.d 
+    networks:
+      - app-network
+    depends_on:
+      - app
+
+# Definición de Red y Volúmenes
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  db_data:
