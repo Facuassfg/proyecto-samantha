@@ -1,17 +1,32 @@
 <?php
-# app/index.php
-// Usaremos los datos definidos en el .env
-$host = 'db'; // Nombre del servicio en docker-compose
-$user = getenv('MYSQL_USER');
-$pass = getenv('MYSQL_PASSWORD');
-$db = getenv('MYSQL_DATABASE');
+// app/index.php - Punto de entrada de la aplicación
 
-try {
-    $conn = new PDO("mysql:host=$host;dbname=$db", $user, $pass);
-    echo "<h1 style='color: green;'>✅ ¡El Entorno Samantha está operativo!</h1>";
-    echo "<p>Nginx está sirviendo la página, PHP-FPM está ejecutando el código y se ha conectado exitosamente al contenedor de MySQL (db).</p>";
-} catch (PDOException $e) {
-    echo "<h1 style='color: red;'>❌ ERROR: Conexión a la base de datos fallida.</h1>";
-    echo "<p>Verifica que las variables en .env sean correctas y que el servicio 'db' esté corriendo.</p>";
+// 1. Cargar clases core
+require_once __DIR__ . '/core/Router.php';
+require_once __DIR__ . '/core/Database.php';
+
+// 2. Cargar modelos
+require_once __DIR__ . '/models/User.php';
+
+// 3. Cargar controladores
+require_once __DIR__ . '/controllers/AuthController.php';
+require_once __DIR__ . '/controllers/AdminController.php';
+
+// 4. Iniciar sesión
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
 }
-?>
+
+// 5. Crear router y definir rutas
+$router = new Router();
+
+// Rutas de autenticación
+$router->get('/', 'AuthController@showLoginForm');
+$router->post('/login', 'AuthController@handleLogin');
+$router->get('/logout', 'AuthController@logout');
+
+// Rutas de administrador
+$router->get('/admin/dashboard', 'AdminController@dashboard');
+
+// 6. Resolver la ruta actual
+$router->resolve();
