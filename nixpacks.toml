@@ -1,8 +1,0 @@
-[phases.setup]
-nixPkgs = ["nginx", "php82", "php82Extensions.pdo", "php82Extensions.pdo_mysql"]
-
-[phases.install]
-cmds = ["echo 'Dependencies ready'"]
-
-[start]
-cmd = "nginx -g 'daemon off;'"
